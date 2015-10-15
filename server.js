@@ -28,7 +28,7 @@ cloudinary.config({
 });
 var app = express();
 
-var connection_string = "127.0.0.1:27017/nodejs";
+var connection_string = "127.0.0.1:52001/nodejs";
 
 if(process.env.OPENSHIFT_MONGODB_DB_PASSWORD){
     connection_string = process.env.OPENSHIFT_MONGODB_DB_USERNAME + ":" +
@@ -215,7 +215,7 @@ app.get("/menu/new", function(solicitud, respuesta){
     respuesta.render("menu/new");
 });
 
-var port = process.env.OPENSHIFT_NODEJS_PORT || 8080;
+var port = process.env.OPENSHIFT_NODEJS_PORT || 63066;
 var ip = process.env.OPENSHIFT_NODEJS_IP || "127.0.0.1";
 
 app.listen(port, ip);
