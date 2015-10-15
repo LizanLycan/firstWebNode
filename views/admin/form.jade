@@ -1,0 +1,19 @@
+doctype html 
+html(lang = "en")
+	head
+		meta(charste = "utf-8")
+		meta(name="viewport")
+		link(rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css")
+		link(rel="stylesheet" href="css/main.css")
+		link(rel="stylesheet" href="css/animate.css")
+
+		title Dragones, criaturas fantasticas
+	body
+		div(class="col-md-5 center-block quitar-float top-space text-left")
+			h1 Login Administradores
+			form(method="POST" action="/admin" style="margin-top:1.5em;")
+				div(class="form-group")
+					label Contrasennia
+					input(type="password" name="pass" placeholder="Contrasennia del Administrador" class="form-control")
+				div(class="form-group text-right")
+					input(type="submit" class="btn btn-info" value="Guardar")

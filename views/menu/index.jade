@@ -1,0 +1,18 @@
+doctype html 
+html(lang = "en")
+	head
+		meta(charste = "utf-8")
+		meta(name="viewport")
+		link(rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css")
+		link(rel="stylesheet" href="css/main.css")
+		link(rel="stylesheet" href="css/animate.css")
+
+		title Dragones, criaturas fantasticas
+	body
+		h2(class="SkyrimFont grande rojo-daedrico") Menu
+		p(class="VanHelsingFont gris pequennia") Bien por ti!! Aqui estan tus dragones
+		each dragon in dragons
+			div(class="col-md-4 col-sm-6 col-xs-12 inline-block")
+				h2(class="SkyrimFont gris ")= dragon.nombre
+				img(src="#{ dragon.image.Url }" class="col-xs-7 col-md-4 quitar-float")
+				p(style="margin-top: 1em;") #[small(class="lato small VanHelsingFont gris") #{dragon.price} Septim]

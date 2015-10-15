@@ -1,0 +1,44 @@
+doctype html 
+html(lang = "en")
+	head
+		meta(charste = "utf-8")
+		meta(name="viewport")
+		link(href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css", rel="stylesheet" integrity="sha256-MfvZlkHCEqatNoGiOXveE8FIwMzZg4W85qfrfIFBfYc= sha512-dTfge/zgoMYpP7QbHy4gWMEGsbsdZeCXz7irItjcC3sPUFtf0kuFbDz/ixG7ArTxmDjLXDmezHubeNikyKGVyQ==" crossorigin="anonymous")
+		link(rel="stylesheet" href="/css/main.css")
+		link(rel="stylesheet" href="/css/animate.css")
+
+		title Dragones, criaturas fantasticas
+	body
+		nav(class="se-gris padding-largo text-center pequennia")
+			ul(class="no-lista")
+				li(class="col-md-3 inline-block VanHelsingFont")
+					a(href="/" class="blanco") Index
+				li(class="col-md-3 inline-block VanHelsingFont blanco") Dragones
+				li(class="col-md-3 inline-block VanHelsingFont")
+					a(href="acerdaDe" class="blanco") Acerca de
+		div(class="col-md-4 center-block quitar-float espacio-arriba text-left")
+			h1(class="SkyrimFont pequennia") Agregar Dragon
+			form(method="post" action="/menu" style="margin-top: 2em;" role="form" enctype="multipart/form-data")
+				div(class="form-group")
+					label Nombre
+					input(type="text" name="nombre" placeholder="Ingrese el nombre del dragon" class="form-control")
+				div(class="form-group")
+					label Descripcion
+					textarea(name="description" placeholder="Descripcion del dragon" class="form-control")
+				div(class="form-group")
+					label Tipo
+					input(type="text" name="tipo" placeholder="Ingrese el tipo del dragon" class="form-control")
+				div(class="form-group")
+					label Skill
+					input(type="text" name="skill" placeholder="Ingrese el skill del dragon" class="form-control")
+				div(class="form-group")
+					label Precio
+					input(type="number" name="price" placeholder="Ingrese el costo del dragon" class="form-control")
+				div(class="form-group")
+					label Imagen del Dragon
+					input(type="file" name="image")
+				div(class="form-group")
+					label Pass
+					input(type="password" name="pass" placeholder="Contrasennia" class="form-control")
+				div(class="form-group text-right")
+					input(type="submit" class="btn btn-info")

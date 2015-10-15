@@ -1,0 +1,39 @@
+doctype html 
+html(lang = "en")
+	head
+		meta(charste = "utf-8")
+		meta(name="viewport")
+		link(rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css")
+		link(rel="stylesheet" href="css/main.css")
+		link(rel="stylesheet" href="css/animate.css")
+
+		title Dragones, criaturas fantasticas
+	body
+		h1(class="margen-top") Panel de Administracion
+		table(class="table")
+			caption Productos Actuales
+			thead
+				tr
+					th #
+					th Nombre
+					th Tipo
+					th Descripcion
+					th Skill
+					th Precio
+					th Imagen
+					th Acciones
+			tbody
+				each dragon in dragons
+					tr
+						td= dragon.id
+						td= dragon.nombre
+						td= dragon.tipo
+						td= dragon.description
+						td= dragon.skill
+						td= dragon.price
+						td 
+							a(href="#{dragon.imageUrl}" class="btn") Ver imagen
+						td
+							a(href="/menu/edit/#{dragon.id}") Editar
+							= "  -  "
+							a(href="/menu/delete/#{dragon.id}") Eliminar	 

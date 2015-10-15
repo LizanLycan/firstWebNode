@@ -1,159 +1,221 @@
-#!/bin/env node
-//  OpenShift sample Node application
 var express = require('express');
-var fs      = require('fs');
+var mongoose = require('mongoose');
+var bodyParser = require('body-parser');
+var multer = require('multer');
+var cloudinary = require("cloudinary");
+var connect = require('connect');
+var methodOverride = require('method-override');
+var pass_admin= "1234";
 
+// Multer Storage para mantener la extenteción del archivo.(IMAGEN)
+var storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, './uploads'); // Directirio donde se guardaran los archivos.
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now()+file.originalname);
+  }
+})
 
-/**
- *  Define the sample application.
- */
-var SampleApp = function() {
+var upload = multer({storage: storage}); 
+///
 
-    //  Scope.
-    var self = this;
+cloudinary.config({
+    cloud_name: "dergk1a1y",
+    api_key: "138727165783356",
+    api_secret: "cYg9m7AlfbxXNXNTVhszym-hCk4"
 
+});
+var app = express();
 
-    /*  ================================================================  */
-    /*  Helper functions.                                                 */
-    /*  ================================================================  */
+var connection_string = "127.0.0.1:27017/nodejs";
 
-    /**
-     *  Set up server IP address and port # using env variables/defaults.
-     */
-    self.setupVariables = function() {
-        //  Set the environment variables we need.
-        self.ipaddress = process.env.OPENSHIFT_NODEJS_IP;
-        self.port      = process.env.OPENSHIFT_NODEJS_PORT || 8080;
+if(process.env.OPENSHIFT_MONGODB_DB_PASSWORD){
+    connection_string = process.env.OPENSHIFT_MONGODB_DB_USERNAME + ":" +
+    process.env.OPENSHIFT_MONGODB_DB_PASSWORD + "@" +
+    process.env.OPENSHIFT_MONGODB_DB_HOST + ":" +
+    process.env.OPENSHIFT_MONGODB_DB_PORT + "/" +
+    process.env,OPENSHIFT_MONGODB_DB_APP_NAME; 
+}
 
-        if (typeof self.ipaddress === "undefined") {
-            //  Log errors on OpenShift but continue w/ 127.0.0.1 - this
-            //  allows us to run/test the app locally.
-            console.warn('No OPENSHIFT_NODEJS_IP var, using 127.0.0.1');
-            self.ipaddress = "127.0.0.1";
-        };
-    };
+mongoose.connect("mongodb://" + connection_string);
 
+app.use(bodyParser.json());
+//el extended estaba en true
+app.use(bodyParser.urlencoded({extended: false}));
+app.use(methodOverride('_method'));
+//Definicion del esquema de productos(objeto dragonSchema)
 
-    /**
-     *  Populate the cache.
-     */
-    self.populateCache = function() {
-        if (typeof self.zcache === "undefined") {
-            self.zcache = { 'index.html': '' };
-        }
+var dragonSchemaJSON = {
+    nombre: String,
+    tipo: String,
+    description: String,
+    skill: String, //entre 1 y 100
+    price: Number,
+    imageUrl: String,
+}
 
-        //  Local cache for static content.
-        self.zcache['index.html'] = fs.readFileSync('./index.html');
-    };
+//ahora se lo paso a mongo db
 
+var dragonSchema = new mongoose.Schema(dragonSchemaJSON);
 
-    /**
-     *  Retrieve entry (content) from cache.
-     *  @param {string} key  Key identifying content to retrieve from cache.
-     */
-    self.cache_get = function(key) { return self.zcache[key]; };
+dragonSchema.virtual("image.Url").get(function(){
+    if (this.imageUrl === "" || this.imageUrl == undefined){
+        return "data.png";
+    }
 
+    return this.imageUrl;
+});
 
-    /**
-     *  terminator === the termination handler
-     *  Terminate server on receipt of the specified signal.
-     *  @param {string} sig  Signal to terminate on.
-     */
-    self.terminator = function(sig){
-        if (typeof sig === "string") {
-           console.log('%s: Received %s - terminating sample app ...',
-                       Date(Date.now()), sig);
-           process.exit(1);
-        }
-        console.log('%s: Node server stopped.', Date(Date.now()) );
-    };
+var dragon = mongoose.model("Dragon", dragonSchema);
+app.set("view engine", "jade");
+//HTTP
+    //METODOS COMUNES
+        //GET solicitar dominios o urls
+        //POST solicitar formularios
 
+//ahora vamos a hacer el servicio de lo que se 
+//encontrara estatico en la pag
+//y el acceso a Index   
 
-    /**
-     *  Setup termination handlers (for exit and a list of signals).
-     */
-    self.setupTerminationHandlers = function(){
-        //  Process on exit and signals.
-        process.on('exit', function() { self.terminator(); });
+app.use(express.static("public"));
 
-        // Removed 'SIGPIPE' from the list - bugz 852598.
-        ['SIGHUP', 'SIGINT', 'SIGQUIT', 'SIGILL', 'SIGTRAP', 'SIGABRT',
-         'SIGBUS', 'SIGFPE', 'SIGUSR1', 'SIGSEGV', 'SIGUSR2', 'SIGTERM'
-        ].forEach(function(element, index, array) {
-            process.on(element, function() { self.terminator(element); });
+app.get("/", function(solicitud, respuesta){
+    //respuesta.send("envio de info");
+    
+    respuesta.render("index");
+});
+
+app.get("/menu", function(solicitud, respuesta){
+    dragon.find(function(error,documento){
+        if(error){console.log(error)}
+            //products: documento, es el valor de mongodb que tiene la info de la base de datos
+        respuesta.render("menu/index", { dragons: documento });
+    });
+});
+
+app.get("/admin", function(solicitud,respuesta){
+    respuesta.render("admin/form");
+});
+
+app.post("/admin", function(solicitud,respuesta){
+    if (solicitud.body.pass == pass_admin){
+        dragon.find(function(error,documento){
+            if(error){console.log(error)}
+                //products: documento, es el valor de mongodb que tiene la info de la base de datos
+            respuesta.render("admin/index", { dragons: documento });
         });
-    };
+    }else{
+        respuesta.redirect("/");
+    }
+});
 
+app.get("/menu/edit/:id", function(solicitud, respuesta){
+    var id=solicitud.params.id;
 
-    /*  ================================================================  */
-    /*  App server functions (main app logic here).                       */
-    /*  ================================================================  */
-
-    /**
-     *  Create the routing table entries + handlers for the application.
-     */
-    self.createRoutes = function() {
-        self.routes = { };
-
-        self.routes['/asciimo'] = function(req, res) {
-            var link = "http://i.imgur.com/kmbjB.png";
-            res.send("<html><body><img src='" + link + "'></body></html>");
-        };
-
-        self.routes['/'] = function(req, res) {
-            res.setHeader('Content-Type', 'text/html');
-            res.send(self.cache_get('index.html') );
-        };
-    };
-
-
-    /**
-     *  Initialize the server (express) and create the routes and register
-     *  the handlers.
-     */
-    self.initializeServer = function() {
-        self.createRoutes();
-        self.app = express.createServer();
-
-        //  Add handlers for the app (from the routes).
-        for (var r in self.routes) {
-            self.app.get(r, self.routes[r]);
+    dragon.findOne({"_id": id}, function(err, dragon_param){
+        respuesta.render("menu/edit", {dragon: dragon_param});
+    });
+});
+//este es put pero app.put no me funciono
+app.put("/menu/:id", upload.single('image'), function(solicitud,respuesta){
+    console.log(solicitud.body.pass);
+    console.log(solicitud.file);
+    if (solicitud.body.pass == pass_admin){
+        var dataDragon = {
+            nombre: solicitud.body.nombre,
+            tipo: solicitud.body.tipo,
+            description: solicitud.body.description,
+            skill: solicitud.body.skill, 
+            price: solicitud.body.price
         }
-    };
+        
+        if(solicitud.file){
+            cloudinary.uploader.upload(solicitud.file.path, 
+                function(result){
+                    console.log(solicitud.file.path);
+                    dataDragon.imageUrl = result.url;
 
+                    dragon.update({"_id": solicitud.params.id}, dataDragon, function(){
+                        respuesta.redirect("/menu");
+                    });
+                });
+        }else{
+            dragon.update({"_id": solicitud.params.id}, dataDragon, function(){
+                respuesta.redirect("/menu");
+            });
+        }
+        
+    }else{respuesta.redirect("/");}
+});
 
-    /**
-     *  Initializes the sample application.
-     */
-    self.initialize = function() {
-        self.setupVariables();
-        self.populateCache();
-        self.setupTerminationHandlers();
+app.get("/menu/delete/:id", function(solicitud, respuesta){
+    var id = solicitud.params.id;
 
-        // Create the express server and routes.
-        self.initializeServer();
-    };
+    dragon.findOne({"_id": id}, function(err, dragon_param){
+        respuesta.render("menu/delete", {dragon: dragon_param});
+    });
+});
 
-
-    /**
-     *  Start the server (starts up the sample application).
-     */
-    self.start = function() {
-        //  Start the app on the specific interface (and port).
-        self.app.listen(self.port, self.ipaddress, function() {
-            console.log('%s: Node server started on %s:%d ...',
-                        Date(Date.now() ), self.ipaddress, self.port);
+app.delete("/menu/:id",function(solicitud,respuesta){
+    var id=solicitud.params.id;
+    console.log(solicitud.body.pass);
+    if (solicitud.body.pass == pass_admin){
+        dragon.remove({"_id": id}, function(err){
+            if(err){console.log(err)}
+            respuesta.redirect("/menu");
         });
-    };
+    }else{
+        respuesta.redirect("/");
+    }
+});
 
-};   /*  Sample Application.  */
+app.post("/menu", upload.single('image'), function(solicitud,respuesta) {
+    
+    if (solicitud.body.pass == pass_admin){
+        var dataDragon = {
+            nombre: solicitud.body.nombre,
+            tipo: solicitud.body.tipo,
+            description: solicitud.body.description,
+            skill: solicitud.body.skill, 
+            price: solicitud.body.price
+        }
 
+        var dragonData = new dragon(dataDragon);
 
+        if(solicitud.file){
+            cloudinary.uploader.upload(solicitud.file.path, 
+                function(result){
+                    console.log(solicitud.file.path);
+                    dragonData.imageUrl = result.url;
 
-/**
- *  main():  Main code.
- */
-var zapp = new SampleApp();
-zapp.initialize();
-zapp.start();
+                    dragonData.save(function (err) {
+                        console.log(dragonData);
+                        respuesta.redirect("/menu");
+                    });
+                }); 
+        }else{
+            dragonData.save(function (err) {
+                console.log(dragonData);
+                respuesta.redirect("/menu");
+            });
+        }
 
+        
+        //console.log(solicitud.file);
+        /**/    
+
+    }else{
+        respuesta.render("menu/new")
+    }
+
+});
+
+app.get("/menu/new", function(solicitud, respuesta){
+    respuesta.render("menu/new");
+});
+
+var port = process.env.OPENSHIFT_NODEJS_PORT || 8080;
+var ip = process.env.OPENSHIFT_NODEJS_IP || "127.0.0.1";
+
+app.listen(port, ip);
