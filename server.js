@@ -216,9 +216,9 @@ app.get("/menu/new", function(solicitud, respuesta){
     respuesta.render("menu/new");
 });
 
+var ipaddress = process.env.OPENSHIFT_NODEJS_IP || "127.0.0.1";
 var port = process.env.OPENSHIFT_NODEJS_PORT || 8080;
-var ip = process.env.OPENSHIFT_NODEJS_IP || "127.0.0.1";
-app.listen(port,ip);
+app.listen(port,ipaddress);
 /*app.set('port', process.env.OPENSHIFT_NODEJS_PORT || process.env.PORT || 3002);
 app.set('ip', process.env.OPENSHIFT_NODEJS_IP || "127.0.0.1");
 
