@@ -33,6 +33,9 @@
     "multer": "^0.1.8",
     "http": "^0.0.0"
   },
+  "scripts": {
+     "start": "node server.js"
+  },
   "devDependencies": {},
   "bundleDependencies": [],
   "private": true,
